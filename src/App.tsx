@@ -1,100 +1,107 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Plotter from "./components/Plotter";
 import {
-  Autocomplete,
   Box,
   Button,
   Container,
   CssBaseline,
-  MenuItem,
-  Select,
+  IconButton,
+  List,
+  ListItem,
+  setRef,
   Stack,
-  TextField,
-  Typography,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Marker, MarkerType, markerTypes } from "./types";
-import { Form, Formik, FormikConfig, FormikProps, FormikValues } from "formik";
+import { Marker } from "./types";
+import { getRandomMarker, markerDict } from "./utils/marker";
+import MarkerInput from "./components/MarkerInput";
+import {
+  onChildAdded,
+  onChildRemoved,
+  push,
+  ref,
+  set,
+} from "firebase/database";
+import { database } from "./firebase";
+import { addMarker, removeMarker } from "./services/markers";
+import { useMarker } from "./hooks/markers";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const darkTheme = createTheme({
   palette: { mode: "dark" },
   typography: { h1: { fontSize: "3rem" } },
 });
 
-const options = [
-  { label: "Common chest", id: "chest-common" },
-  ...markerTypes.map((mt) => ({ label: mt, id: mt })),
-];
+const day = "day-430";
 
 function App() {
-  const [markers, setMarkers] = useState<Marker[]>([]);
-  const formikSetup: FormikConfig<Partial<Marker>> = {
-    initialValues: { type: "chest-common", x: undefined, y: undefined },
-    onSubmit: (values) => {
-      setMarkers((markers) => [...markers, values as Marker]);
-    },
+  const { markers, markerList } = useMarker(day);
+  const submitMarker = async (marker: Marker) => {
+    try {
+      await addMarker(day, marker);
+    } catch (error) {
+      console.error(error);
+    }
   };
+  const handleMarkerSubmit = (values: Partial<Marker>) => {
+    submitMarker(values as Marker);
+  };
+  const generateRandomCoord = () => {
+    submitMarker(getRandomMarker());
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Container>
-        <header>
-          <Typography variant="h1">Tides Voyage</Typography>
-        </header>
-        <main>
-          <Box sx={{ height: "80vh" }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Box sx={{ height: "100vh" }}>
             <Plotter data={markers} />
           </Box>
-          <br />
-          <Formik {...formikSetup}>
-            {(formik) => (
-              <Form>
-                <Stack direction="row">
-                  <Autocomplete
-                    disablePortal
-                    options={options}
-                    defaultValue={options[0]}
-                    sx={{ width: 200 }}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Type" />
-                    )}
-                    onChange={(e, val) => {
-                      formik.setFieldValue("type", val, true);
-                    }}
-                  />
-                  <TextField
-                    variant="outlined"
-                    label="Coord"
-                    error={!!(formik.errors.x || formik.errors.y)}
-                    helperText={formik.errors.x || formik.errors.y}
-                    onChange={(e) => {
-                      let values: number[] | string[] =
-                        e.target.value.split(",");
-                      if (values.length < 2)
-                        return formik.setFieldError(
-                          "x",
-                          "Must be separated by commas"
-                        );
-                      values = values.map((v) => Number(v.trim()));
-                      formik.setFieldValue("x", values[0]);
-                      formik.setFieldValue("y", values[1]);
-                    }}
-                  />
-                  {/* <TextField
-                    variant="outlined"
-                    label="y"
-                    onChange={(e) => {
-                      formik.setFieldValue("y", e.currentTarget.value);
-                    }}
-                  /> */}
-                  <Button type="submit" variant="contained">
-                    Submit
-                  </Button>
-                </Stack>
-              </Form>
-            )}
-          </Formik>
-        </main>
+          <Stack spacing={2}>
+            <MarkerInput onSubmit={handleMarkerSubmit} />
+            <Button onClick={generateRandomCoord}>Generate Random</Button>
+            <Box
+              sx={{ height: "40vh", overflowY: "auto", paddingRight: "8px" }}
+            >
+              <List>
+                {Object.entries(markerList).map(([key, marker]) => (
+                  <ListItem
+                    key={key}
+                    disableGutters
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        size="small"
+                        onClick={() => {
+                          removeMarker(day, key);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    }
+                  >
+                    <span
+                      style={{
+                        color: markerDict[marker.type].color,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {markerDict[marker.type].shortLabel}
+                    </span>
+                    : {marker.x}, {marker.y}
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </Stack>
+        </Stack>
       </Container>
     </ThemeProvider>
   );

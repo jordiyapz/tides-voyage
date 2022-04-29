@@ -1,33 +1,33 @@
-import { VictoryChart, VictoryScatter, VictoryZoomContainer } from "victory";
+import {
+  VictoryChart,
+  VictoryScatter,
+  VictoryTheme,
+  VictoryZoomContainer,
+} from "victory";
 import { Marker } from "../../types";
-import theme from "./theme";
+import { markerDict } from "../../utils/marker";
 
 type PlotterProps = { data: Marker[] };
 
 const Plotter = ({ data }: PlotterProps) => {
   return (
     <VictoryChart
-      theme={theme}
-      // animate={{
-      //   duration: 2000,
-      //   onLoad: { duration: 1000 },
-      // }}
-      domain={{ x: [-100, 100], y: [-100, 100] }}
+      theme={VictoryTheme.material}
+      domain={{ x: [-5000, 5000], y: [-5000, 5000] }}
+      domainPadding={{ x: 0, y: 0 }}
+      padding={{ top: 10, bottom: 10, right: 10, left: 10 }}
       containerComponent={<VictoryZoomContainer allowPan />}
     >
       <VictoryScatter
-        style={{ data: { fill: "#c43a31" } }}
         data={data.map((marker) => {
-          const color = (() => {
-            switch (marker.type) {
-              case "chest-common":
-                return "red";
-              default:
-                return "green";
-            }
-          })();
-          return { ...marker, fill: color };
+          return { ...marker, fill: markerDict[marker.type].color };
         })}
+        style={{
+          data: {
+            fill: ({ datum }) => datum.fill,
+            opacity: ({ datum }) => datum.opacity,
+          },
+        }}
       />
     </VictoryChart>
   );
