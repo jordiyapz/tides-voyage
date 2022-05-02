@@ -4,6 +4,7 @@ import { initializeApp } from "firebase/app";
 
 // TODO: Add SDKs for Firebase products that you want to use
 import { connectDatabaseEmulator, getDatabase } from "firebase/database";
+import { connectAuthEmulator, getAuth } from "firebase/auth";
 
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -26,8 +27,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 // export const analytics = getAnalytics(app);
 export const database = getDatabase(app);
+export const auth = getAuth(app);
 if (window.location.hostname === "localhost") {
   // Point to the RTDB emulator running on localhost.
-  connectDatabaseEmulator(database, "localhost", 9000);
+  connectDatabaseEmulator(database, "localhost", 9001);
+  connectAuthEmulator(auth, "http://localhost:9002");
   console.log("Connected to RTDB");
 }
