@@ -23,7 +23,6 @@ const MarkerInput = ({ onSubmit }: MarkerInputProps) => {
               disablePortal
               options={options}
               defaultValue={options[0]}
-              sx={{ width: 200 }}
               renderInput={(params) => (
                 <TextField {...params} size="small" label="Type" />
               )}

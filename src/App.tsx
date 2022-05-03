@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Plotter from "./components/Plotter";
 import {
   Box,
   Button,
@@ -8,37 +7,43 @@ import {
   IconButton,
   List,
   ListItem,
-  setRef,
   Stack,
+  Typography,
 } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Marker } from "./types";
-import { getRandomMarker, markerDict } from "./utils/marker";
-import MarkerInput from "./components/MarkerInput";
-import {
-  onChildAdded,
-  onChildRemoved,
-  push,
-  ref,
-  set,
-} from "firebase/database";
-import { database } from "./firebase";
-import { addMarker, removeMarker } from "./services/markers";
-import { useMarker } from "./hooks/markers";
+import { ThemeProvider } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-const darkTheme = createTheme({
-  palette: { mode: "dark" },
-  typography: { h1: { fontSize: "3rem" } },
-});
+import { signInAnonymously, User } from "firebase/auth";
+import { Marker } from "./types";
+import { darkTheme } from "./theme";
+import { auth } from "./firebase";
+import Plotter from "./components/Plotter";
+import MarkerInput from "./components/MarkerInput";
+import { useMarker } from "./hooks/markers";
+import { addMarker, removeMarker } from "./services/markers";
+import { getRandomMarker, markerDict } from "./utils/marker";
 
 const day = "day-430";
 
 function App() {
   const { markers, markerList } = useMarker(day);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    signInAnonymously(auth)
+      .then(() => {
+        setUser(auth.currentUser);
+      })
+      .catch((error: any) => {
+        // const errorCode: number = error.code;
+        // const errorMessage: string = error.message;
+        console.error(error);
+      });
+  }, []);
+
   const submitMarker = async (marker: Marker) => {
+    if (!user) throw new Error("Authentication is required");
     try {
-      await addMarker(day, marker);
+      await addMarker(day, marker, user?.uid);
     } catch (error) {
       console.error(error);
     }
@@ -58,17 +63,26 @@ function App() {
           direction="row"
           spacing={2}
           justifyContent="center"
-          alignItems="center"
+          alignItems="stretch"
         >
           <Box sx={{ height: "100vh" }}>
             <Plotter data={markers} />
           </Box>
-          <Stack spacing={2}>
-            <MarkerInput onSubmit={handleMarkerSubmit} />
-            <Button onClick={generateRandomCoord}>Generate Random</Button>
-            <Box
-              sx={{ height: "40vh", overflowY: "auto", paddingRight: "8px" }}
-            >
+          <Stack spacing={3} sx={{ py: 5, maxHeight: "100vh" }}>
+            <Box>
+              {user && (
+                <>
+                  <Typography variant="subtitle2">
+                    <b>UID:</b> {user.uid}
+                  </Typography>
+                </>
+              )}
+            </Box>
+            <Stack spacing={1}>
+              <MarkerInput onSubmit={handleMarkerSubmit} />
+              <Button onClick={generateRandomCoord}>Generate Random</Button>
+            </Stack>
+            <Box sx={{ flex: 2, overflowY: "auto", paddingRight: "8px" }}>
               <List>
                 {Object.entries(markerList).map(([key, marker]) => (
                   <ListItem

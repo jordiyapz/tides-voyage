@@ -2,9 +2,9 @@ import { push, ref, remove, set } from "firebase/database";
 import { database } from "../firebase";
 import { Marker } from "../types";
 
-export const addMarker = (day: string, marker: Marker) => {
+export const addMarker = (day: string, marker: Marker, postedBy: string) => {
   const markerRef = ref(database, "markers/" + day);
-  return set(push(markerRef), marker);
+  return set(push(markerRef), { ...marker, postedBy });
 };
 
 export const removeMarker = (day: string, id: string) => {

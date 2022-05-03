@@ -4,4 +4,9 @@ export type MarkerType =
   | "chest-epic"
   | "fishing-tournament";
 
-export type Marker = { type: MarkerType; x: number; y: number };
+export type Marker = {
+  type: MarkerType;
+  x: number;
+  y: number;
+  postedBy?: string;
+};
