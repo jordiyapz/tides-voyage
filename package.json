@@ -27,7 +27,9 @@
     "web-vitals": "^2.1.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "dev": "react-scripts start",
+    "fb:em:start": "firebase emulators:start",
+    "fb:em:free": "kill-port 9000:9002",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -51,6 +53,7 @@
     ]
   },
   "devDependencies": {
-    "@types/recharts": "^1.8.23"
+    "@types/recharts": "^1.8.23",
+    "kill-port": "^1.6.1"
   }
 }
