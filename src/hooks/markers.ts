@@ -1,28 +1,26 @@
 import { onChildAdded, onChildRemoved, ref } from "firebase/database";
 import { useEffect, useState } from "react";
 import { database } from "../firebase";
-import { Marker } from "../types";
+import { Marker, RawMarker } from "../types";
+import MarkerFactory from "../utils/MarkerFactory";
 
 export const useMarker = (day: string) => {
-  const [markerList, setMarkerList] = useState<{ [key: string]: Marker }>({});
-  const markers = Object.values(markerList) as Marker[];
+  const [markers, setMarkerList] = useState<Marker[]>([]);
 
   // Attach marker event listeners
   useEffect(() => {
     const markerListRef = ref(database, "markers/" + day);
 
     const unsubChildAdded = onChildAdded(markerListRef, (data) => {
-      if (data.key) {
-        setMarkerList((md) => ({ ...md, [data.key ?? ""]: data.val() }));
+      if (data.key !== null) {
+        const newRawMarker = { key: data.key, ...data.val() };
+        const newMarker = MarkerFactory.enhance(newRawMarker);
+        setMarkerList((md) => [...md, newMarker]);
       }
     });
 
     const unsubChildRemoved = onChildRemoved(markerListRef, (data) => {
-      setMarkerList((md) => {
-        const newMarkerDict = { ...md };
-        if (data.key) delete newMarkerDict[data.key];
-        return newMarkerDict;
-      });
+      setMarkerList((md) => md.filter((marker) => marker.key !== data.key));
     });
 
     return () => {
@@ -31,8 +29,5 @@ export const useMarker = (day: string) => {
     };
   }, [day]);
 
-  return {
-    markers,
-    markerList,
-  };
+  return { markers };
 };

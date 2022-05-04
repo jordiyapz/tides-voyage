@@ -1,34 +1,25 @@
-import { Marker, MarkerType } from "../types";
+import { RawMarker, MarkerType, Marker } from "../types";
 
-type MarkerDictItem = {
-  id: string;
-  label: string;
-  color: string;
-  shortLabel: string;
-};
+type MarkerDictItem = Pick<Marker, "name" | "color" | "shortLabel">;
 
 export const markerDict: { [key in MarkerType]: MarkerDictItem } = {
   "chest-common": {
-    id: "chest-common",
-    label: "Common chest",
+    name: "Common chest",
     color: "green",
     shortLabel: "C",
   },
   "chest-rare": {
-    id: "chest-rare",
-    label: "Rare chest",
+    name: "Rare chest",
     color: "blue",
     shortLabel: "R",
   },
   "chest-epic": {
-    id: "chest-epic",
-    label: "Epic chest",
+    name: "Epic chest",
     color: "purple",
     shortLabel: "E",
   },
   "fishing-tournament": {
-    id: "fishing-tournament",
-    label: "Fishing Tournament",
+    name: "Fishing Tournament",
     color: "cyan",
     shortLabel: "F",
   },
@@ -36,7 +27,7 @@ export const markerDict: { [key in MarkerType]: MarkerDictItem } = {
 
 export const markerTypes = Object.keys(markerDict) as MarkerType[];
 
-export function getRandomMarker(): Marker {
+export function getRandomMarker() {
   return {
     type: markerTypes[Math.floor(Math.random() * markerTypes.length)],
     x: Math.floor(Math.random() * 6000 - 3000),

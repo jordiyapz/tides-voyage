@@ -1,18 +1,22 @@
 import { Autocomplete, Button, Stack, TextField } from "@mui/material";
 import { Form, Formik, FormikConfig } from "formik";
-import { Marker } from "../../types";
-import { markerDict } from "../../utils/marker";
+import { RawMarker } from "../../types";
+import { markerDict, markerTypes } from "../../utils/marker";
 
 type MarkerInputProps = {
-  onSubmit: (values: Partial<Marker>) => void;
+  onSubmit: (values: Partial<RawMarker>) => void;
 };
 
 const MarkerInput = ({ onSubmit }: MarkerInputProps) => {
-  const formikSetup: FormikConfig<Partial<Marker>> = {
+  const formikSetup: FormikConfig<Partial<RawMarker>> = {
     initialValues: { type: "chest-common", x: undefined, y: undefined },
     onSubmit,
   };
-  const options = Object.values(markerDict);
+
+  const options = markerTypes.map((type) => ({
+    label: markerDict[type].name,
+    type,
+  }));
 
   return (
     <Formik {...formikSetup}>
@@ -27,7 +31,7 @@ const MarkerInput = ({ onSubmit }: MarkerInputProps) => {
                 <TextField {...params} size="small" label="Type" />
               )}
               onChange={(e, val) => {
-                formik.setFieldValue("type", val?.id, true);
+                formik.setFieldValue("type", val?.type, true);
               }}
             />
             <TextField

@@ -11,9 +11,8 @@ import {
   Typography,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { signInAnonymously, User } from "firebase/auth";
-import { Marker } from "./types";
+import { Marker, MinimalMarker, RawMarker } from "./types";
 import { darkTheme } from "./theme";
 import { auth } from "./firebase";
 import Plotter from "./components/Plotter";
@@ -21,11 +20,12 @@ import MarkerInput from "./components/MarkerInput";
 import { useMarker } from "./hooks/markers";
 import { addMarker, removeMarker } from "./services/markers";
 import { getRandomMarker, markerDict } from "./utils/marker";
+import MarkerList from "./components/MarkerList";
 
 const day = "day-430";
 
 function App() {
-  const { markers, markerList } = useMarker(day);
+  const { markers } = useMarker(day);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ function App() {
       });
   }, []);
 
-  const submitMarker = async (marker: Marker) => {
+  const submitMarker = async (marker: MinimalMarker) => {
     if (!user) throw new Error("Authentication is required");
     try {
       await addMarker(day, marker, user?.uid);
@@ -48,8 +48,8 @@ function App() {
       console.error(error);
     }
   };
-  const handleMarkerSubmit = (values: Partial<Marker>) => {
-    submitMarker(values as Marker);
+  const handleMarkerSubmit = (values: Partial<RawMarker>) => {
+    submitMarker(values as RawMarker);
   };
   const generateRandomCoord = () => {
     submitMarker(getRandomMarker());
@@ -83,36 +83,12 @@ function App() {
               <Button onClick={generateRandomCoord}>Generate Random</Button>
             </Stack>
             <Box sx={{ flex: 2, overflowY: "auto", paddingRight: "8px" }}>
-              <List>
-                {Object.entries(markerList).map(([key, marker]) => (
-                  <ListItem
-                    key={key}
-                    disableGutters
-                    secondaryAction={
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        size="small"
-                        onClick={() => {
-                          removeMarker(day, key);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    }
-                  >
-                    <span
-                      style={{
-                        color: markerDict[marker.type].color,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {markerDict[marker.type].shortLabel}
-                    </span>
-                    : {marker.x}, {marker.y}
-                  </ListItem>
-                ))}
-              </List>
+              <MarkerList
+                markers={markers}
+                onDelete={(key) => {
+                  removeMarker(day, key);
+                }}
+              />
             </Box>
           </Stack>
         </Stack>
